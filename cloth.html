@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>asone</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poiret+One&display=swap" rel="stylesheet">
+
+    <!-- Model Viewer Script -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+
+    <style>
+        /* Global Reset & Font Setup */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poiret One', cursive;
+            background-color: #000000;
+            color: #ffffff;
+            overflow-x: hidden;
+            line-height: 1.6;
+            /* Add padding top equal to navbar height */
+            padding-top: 70px; /* Adjust based on final navbar height */
+        }
+
+        /* --- Navbar Styles --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000; /* Above everything else */
+            transition: background-color 0.3s ease;
+            padding: 10px 5%; /* Consistent padding */
+
+            /* Glassmorphism */
+            background: rgba(10, 10, 10, 0.3); /* Darker transparent bg */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); /* Safari */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 50px; /* Adjust navbar height */
+        }
+
+        .logo a {
+            font-size: 1.8rem;
+            font-weight: bold; /* Poiret One doesn't have bold, acts as normal */
+            color: #ffffff;
+            text-decoration: none;
+            text-transform: lowercase;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-links li a {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 5px 0;
+            position: relative;
+            transition: color 0.3s ease;
+            text-transform: lowercase;
+        }
+
+        .nav-links li a:hover {
+            color: #ffffff;
+        }
+
+        .nav-links li a::after { /* Simple underline effect */
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 1px;
+            background-color: #ffffff;
+            bottom: 0;
+            left: 0;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links li a:hover::after {
+            width: 100%;
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 25px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 1001; /* Above nav links when open */
+        }
+
+        .menu-toggle .bar {
+            display: block;
+            width: 100%;
+            height: 2px;
+            background-color: #ffffff;
+            border-radius: 1px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* --- End Navbar Styles --- */
+
+
+        /* Fixed Shirt Model Container Styling */
+        #shirt-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 450px; /* Adjust size as needed */
+            height: 500px; /* Adjust size as needed */
+            z-index: 10; /* Below navbar, above content */
+            transition: left 0.6s ease-out, top 0.6s ease-out, transform 0.6s ease-out;
+            pointer-events: none;
+            mix-blend-mode: difference;
+        }
+
+         /* Model Viewer Specific Style */
+         model-viewer {
+             display: block;
+             width: 100%;
+             height: 100%;
+             background-color: transparent; /* Important for blend */
+             --progress-bar-color: #ffffff;
+             --progress-mask: transparent;
+         }
+
+        /* JS-Controlled Shirt Positioning Classes */
+        #shirt-container.shirt-pos-right { left: 70%; }
+        #shirt-container.shirt-pos-left { left: 20%; }
+        #shirt-container.shirt-pos-center { left: 50%; }
+
+        /* General Section Styling */
+        section {
+            min-height: 100vh;
+            width: 100%;
+            padding: 80px 5%; /* Increased padding top/bottom */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-wrapper {
+            max-width: 1200px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Headings, Paragraphs, Links (keep as before) */
+        h1, h2, h3 { text-transform: lowercase; margin-bottom: 20px; font-weight: normal; }
+        h1 { font-size: clamp(3rem, 8vw, 6rem); line-height: 1.1; color: #ffffff;}
+        h2 { font-size: clamp(2rem, 5vw, 3.5rem); margin-bottom: 30px; color: #ccc; }
+        h3 { font-size: 1.4rem; margin-bottom: 10px; color: #f0f0f0; }
+        p { font-size: 1rem; color: #cccccc; margin-bottom: 15px; }
+        a { color: #ffffff; text-decoration: none; transition: opacity 0.3s ease; }
+        a:hover { opacity: 0.8; text-decoration: underline; }
+
+        /* --- Section Specific Layouts --- */
+
+        /* Section 1: Timer (Shirt Right) */
+        #timer-section .content-wrapper { justify-content: space-between; }
+        .timer-content { flex-basis: 60%; text-align: left; }
+        #countdown { display: flex; justify-content: flex-start; gap: 15px; font-size: clamp(1.2rem, 3vw, 2rem); color: #ffffff; background-color: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 5px; border: 1px solid #333; flex-wrap: wrap; margin-top: 30px; }
+        #countdown div { text-align: center; min-width: 70px; }
+        #countdown span { display: block; font-size: 0.6em; color: #aaaaaa; text-transform: lowercase; margin-top: 5px; }
+
+        /* Section 2: Shop (Shirt Left) */
+         #shop-section { background-color: #0a0a0a; }
+        #shop-section .content-wrapper { justify-content: end; gap: 5%; }
+        .shop-content { flex-basis: 70%; text-align: center; }
+        .shop-content h2 { text-align: center; margin-bottom: 40px; }
+        .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; }
+        /* Product Card Styles (keep as before) */
+        .product-card { background-color: #111111; border: 1px solid #222222; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(255, 255, 255, 0.05); }
+        .product-image { width: 100%; height: 180px; background-color: #2a2a2a; margin-bottom: 15px; overflow: hidden; }
+        .product-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .product-card h3 { font-size: 1.1rem; margin-bottom: 8px;}
+        .price { margin-bottom: 10px; font-size: 1rem; }
+        .offer-price { font-weight: bold; color: #ffffff; margin-right: 8px; }
+        .original-price { text-decoration: line-through; color: #777777; font-size: 0.85em; }
+        .details { font-size: 0.8rem; color: #bbbbbb; margin-bottom: 10px; width: 100%; }
+        .sizes, .colors { margin-bottom: 6px; display: flex; justify-content: center; align-items: center; gap: 5px; flex-wrap: wrap; }
+        .sizes span:first-child, .colors span:first-child { margin-right: 4px; }
+        .size { border: 1px solid #555; padding: 1px 4px; border-radius: 3px; text-transform: uppercase; font-size: 0.7em; }
+        .size.unavailable { text-decoration: line-through; opacity: 0.5; border-color: #333; color: #666; }
+        .color-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1px solid #555; cursor: pointer; }
+        .cta-button { background-color: #ffffff; color: #000000; border: none; padding: 8px 18px; font-family: 'Poiret One', cursive; font-size: 0.8rem; text-transform: lowercase; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease; margin-top: auto; }
+        .cta-button:hover { background-color: #cccccc; }
+
+        /* Section 3: Contact (Shirt Center) */
+        #contact-section .content-wrapper { justify-content: space-between; align-items: flex-start; padding-top: 80px; padding-bottom: 80px; }
+        .location-info, .contact-info { flex-basis: 35%; text-align: left; }
+        .location-info h2, .contact-info h2 { font-size: 1.8rem; color: #eee; margin-bottom: 15px; }
+        .location-info p, .location-info ul, .contact-info p { margin-bottom: 10px; color: #bbb; }
+        .location-info ul { list-style: none; padding-left: 0; }
+        .location-info li::before { content: '> '; opacity: 0.6; }
+        .contact-info a { display: block; margin-bottom: 10px; word-break: break-all; }
+        .insta-link { font-size: 1.1rem; margin-top: 15px; }
+        .insta-link a { display: inline-block;}
+
+        /* Section 4: About (Shirt Left) - ★★★ UPDATED ★★★ */
+        #about-section { background-color: #050505; }
+        #about-section .content-wrapper {
+            justify-content: end; /* Leave space on left */
+            gap: 5%; /* Gap between shirt space and content */
+        }
+        .about-content {
+            flex-basis: 65%; /* Content takes right part */
+            text-align: left; /* Align text left */
+            padding-left: 20px; /* Add some padding */
+        }
+        /* Shirt positioned left via JS/CSS */
+        .about-content h2 { margin-bottom: 25px; color: #eee; }
+        .about-content p { font-size: 1.1rem; color: #ddd; margin-bottom: 20px; }
+        .about-content .moto { font-style: italic; color: #aaa; margin-bottom: 30px; }
+        .about-content .founder { margin-top: 40px; font-size: 0.9rem; color: #888; }
+
+        /* --- Footer --- */
+         footer { text-align: center; padding: 40px 5% 20px; font-size: 0.9rem; color: #777; background-color: #050505; border-top: 1px solid #222; }
+         footer p { margin-bottom: 5px; color: #777; }
+         footer a { color: #999; }
+         footer a:hover { color: #fff; }
+
+        /* --- Responsive Adjustments --- */
+        @media (max-width: 992px) {
+            .product-grid { grid-template-columns: repeat(2, 1fr); }
+            .product-image { height: 220px; }
+            #contact-section .content-wrapper { flex-direction: column; text-align: center; gap: 40px; }
+            .location-info, .contact-info { flex-basis: 100%; text-align: center; }
+            .location-info li::before { content: ''; }
+            .contact-info a { display: inline-block; }
+        }
+
+        @media (max-width: 768px) {
+            body { padding-top: 60px; } /* Adjust for smaller navbar */
+            header { padding: 5px 5%; }
+            .navbar-container { height: 50px; }
+
+             /* Navbar Mobile */
+            .menu-toggle { display: flex; } /* Show hamburger */
+            .nav-links {
+                position: fixed;
+                top: 60px; /* Position below navbar */
+                left: 0;
+                width: 100%;
+                height: calc(100vh - 60px); /* Full height below navbar */
+                background: rgba(10, 10, 10, 0.9); /* Darker solid bg for mobile menu */
+                backdrop-filter: blur(5px); /* Less blur maybe */
+                -webkit-backdrop-filter: blur(5px);
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 30px;
+                transform: translateX(100%); /* Hide offscreen */
+                transition: transform 0.3s ease-in-out;
+                z-index: 999; /* Below header */
+            }
+            .nav-links.active {
+                transform: translateX(0); /* Slide in */
+            }
+             .nav-links li a { font-size: 1.5rem; color: #fff;}
+
+             /* Hamburger Animation */
+            .menu-toggle.active .bar:nth-child(1) { transform: rotate(-45deg) translate(-5px, 6px); }
+            .menu-toggle.active .bar:nth-child(2) { opacity: 0; }
+            .menu-toggle.active .bar:nth-child(3) { transform: rotate(45deg) translate(-5px, -6px); }
+
+
+            /* Adjust section content stacking */
+            h1 { font-size: clamp(2.5rem, 10vw, 4rem); }
+            h2 { font-size: clamp(1.8rem, 6vw, 2.5rem); }
+            section { padding: 60px 5%; } /* Adjust padding */
+
+            /* Stack section content */
+            #timer-section .content-wrapper,
+            #shop-section .content-wrapper,
+            #about-section .content-wrapper { /* Add about section here */
+                 flex-direction: column;
+                 text-align: center; /* Center text for stacked layout */
+            }
+             .timer-content, .shop-content, .about-content {
+                 flex-basis: 100%;
+                 padding-left: 0; /* Remove padding for about */
+                 text-align: center; /* Ensure centered */
+             }
+            #countdown { justify-content: center; }
+            #shop-section .content-wrapper { gap: 30px; } /* Reduce gap */
+
+            /* Adjust shirt positioning for mobile - simplified to top-center */
+            #shirt-container {
+                width: 150px; /* Smaller */
+                height: 180px;
+                top: 15%; /* Example position below navbar */
+                left: 50%;
+                transform: translate(-50%, 0) scale(0.8);
+                mix-blend-mode: difference; /* Keep blend mode */
+                /* Remove positioning classes effect if always centered on mobile */
+                 transition: top 0.6s ease-out, transform 0.6s ease-out; /* Only animate top/scale */
+            }
+            /* Override positioning classes on mobile */
+             #shirt-container.shirt-pos-right,
+             #shirt-container.shirt-pos-left,
+             #shirt-container.shirt-pos-center {
+                  left: 50%;
+             }
+
+             /* Add padding to sections to avoid overlap with shirt */
+            #timer-section, #shop-section, #contact-section, #about-section {
+                 padding-top: 220px; /* Significantly more padding needed */
+            }
+            /* Contact section might need less adjustment if shirt is centered */
+             #contact-section {
+                 padding-top: 80px; /* Reset if using center pos */
+                 padding-bottom: 80px;
+             }
+              #contact-section .content-wrapper { padding-top: 0; padding-bottom: 0; } /* Reset wrapper padding */
+
+
+            .product-grid { gap: 15px; }
+            .product-image { height: 190px; }
+             #contact-section .content-wrapper { padding-top: 60px; padding-bottom: 60px; }
+             .about-content p { font-size: 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            .product-grid { grid-template-columns: 1fr; }
+            .product-image { height: 240px; }
+            #countdown { gap: 10px; padding: 10px 15px; font-size: 1rem;}
+            #countdown div { min-width: 50px;}
+
+             /* Further adjust shirt/padding if needed */
+             #shirt-container {
+                 width: 120px;
+                 height: 150px;
+                 top: 12%; /* Move slightly higher maybe */
+             }
+             #timer-section, #shop-section, #contact-section, #about-section {
+                 padding-top: 200px; /* Adjust as needed */
+             }
+             #contact-section { padding-top: 80px; }
+        }
+
+         /* Model Viewer Progress Bar Styles (Optional) */
+        .progress-bar { display: block; width: 100%; height: 4px; border-radius: 2px; background-color: rgba(255, 255, 255, 0.2); position: absolute; bottom: 10px; left: 0; overflow: hidden; z-index: 1; opacity: 1; transition: opacity 0.3s; }
+        .progress-bar.hide { opacity: 0; transition: opacity 0.3s 0.3s; }
+        .update-bar { background-color: var(--progress-bar-color, #fff); width: 0%; height: 100%; border-radius: 2px; transition: width 0.3s; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="navbar-container">
+            <div class="logo">
+                <a href="#">asone</a>
+            </div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#timer-section">home</a></li>
+                    <li><a href="#shop-section">shop</a></li>
+                    <li><a href="#contact-section">contact</a></li>
+                    <li><a href="#about-section">about</a></li>
+                </ul>
+            </nav>
+            <button class="menu-toggle" aria-label="Toggle Menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- The 3D Shirt Model Container (Fixed Position, JS Controlled) -->
+    <div id="shirt-container">
+         <!-- ↓↓↓ YOUR <model-viewer> TAG GOES HERE ↓↓↓ -->
+           <model-viewer
+               id="actual-shirt-model"
+               src="/web-chef/html-projects/A_high_quality_3D_mod_0409113440_texture.glb"  
+               alt="3d model of asone shirt"
+               auto-rotate
+               camera-controls
+               disable-zoom
+               shadow-intensity="1"
+               style="width: 100%; height: 100%; background-color: transparent;"
+               touch-action="pan-y"
+               >
+               <div class="progress-bar hide" slot="progress-bar">
+                   <div class="update-bar"></div>
+               </div>
+           </model-viewer>
+         <!-- ↑↑↑ END OF <model-viewer> TAG ↑↑↑ -->
+    </div>
+
+    <main>
+        <!-- Section 1: Timer (Shirt Right) -->
+        <section id="timer-section" data-shirt-pos="right">
+            <div class="content-wrapper">
+                <div class="timer-content">
+                    <h1>asone</h1>
+                    <h2>next drop</h2>
+                    <div id="countdown">
+                        <div><span id="days">00</span>days</div>
+                        <div><span id="hours">00</span>hours</div>
+                        <div><span id="minutes">00</span>minutes</div>
+                        <div><span id="seconds">00</span>seconds</div>
+                    </div>
+                     <p style="margin-top: 20px;">limited release. sign up for notifications.</p>
+                </div>
+                <!-- Shirt positioned right -->
+            </div>
+        </section>
+
+        <!-- Section 2: Shop (Shirt Left) -->
+        <section id="shop-section" data-shirt-pos="left">
+             <div class="content-wrapper">
+                 <!-- Shirt positioned left -->
+                 <div class="shop-content">
+                    <h2>explore shirts here</h2>
+                    <div class="product-grid">
+                        <!-- Product Cards 1-9 (Keep as before) -->
+                         <div class="product-card"> <div class="product-image"><img src="/web-chef/html-projects/as1.png" alt="Product 1"></div> <h3>core tee v1</h3> <div class="price"><span class="offer-price">$35</span><span class="original-price">$45</span></div> <div class="details"><div class="sizes"><span>sz:</span><span class="size">s</span><span class="size">m</span><span class="size unavailable">l</span></div><div class="colors"><span>cl:</span><span class="color-swatch" style="background: #fff;"></span><span class="color-swatch" style="background: #333;"></span></div></div> <button class="cta-button">view</button> </div>
+                         <div class="product-card"> <div class="product-image"><img src="/web-chef/html-projects/as2.png" alt="Product 2"></div> <h3>minimalist long</h3> <div class="price"><span class="offer-price">$50</span></div> <div class="details"><div class="sizes"><span>sz:</span><span class="size">m</span><span class="size">l</span><span class="size">xl</span></div><div class="colors"><span>cl:</span><span class="color-swatch" style="background: #1a1a1a;"></span><span class="color-swatch" style="background: #eee;"></span></div></div> <button class="cta-button">view</button> </div>
+                         <div class="product-card"> <div class="product-image"><img src="/web-chef/html-projects/as3.jpg" alt="Product 3"></div> <h3>structured fit</h3> <div class="price"><span class="offer-price">$40</span></div> <div class="details"><div class="sizes"><span>sz:</span><span class="size">s</span><span class="size">m</span><span class="size">l</span></div><div class="colors"><span>cl:</span><span class="color-swatch" style="background: #ccc;"></span></div></div> <button class="cta-button">view</button> </div>
+                         <div class="product-card"> <div class="product-image"><img src="/web-chef/html-projects/as4.jpg" alt="Product 4"></div> <h3>heavy cotton</h3> <div class="price"><span class="offer-price">$48</span><span class="original-price">$60</span></div> <div class="details"><div class="sizes"><span>sz:</span><span class="size">m</span><span class="size">l</span><span class="size">xl</span></div><div class="colors"><span>cl:</span><span class="color-swatch" style="background: #000;"></span></div></div> <button class="cta-button">view</button> </div>
+                         <div class="product-card"> <div class="product-image"><img src="/web-chef/html-projects/as5.jpg" alt="Product 5"></div> <h3>aero blend</h3> <div class="price"><span class="offer-price">$55</span></div> <div class="details"><div class="sizes"><span>sz:</span><span class="size">s</span><span class="size">m</span><span class="size">l</span></div><div class="colors"><span>cl:</span><span class="color-swatch" style="background: #f0f0f0;"></span><span class="color-swatch" style="background: #4a4a4a;"></span></div></div> <button class="cta-button">view</button> </div>
+                         <div class="product-card"> <div class="product-image"><img src="/web-chef/html-projects/as6.jpg" alt="Product 6"></div> <h3>classic pocket</h3> <div class="price"><span class="offer-price">$38</span></div> <div class="details"><div class="sizes"><span>sz:</span><span class="size unavailable">s</span><span class="size">m</span><span class="size">l</span><span class="size">xl</span></div><div class="colors"><span>cl:</span><span class="color-swatch" style="background: #fff;"></span></div></div> <button class="cta-button">view</button> </div>
+                         <div class="product-card"> <div class="product-image"><img src="/web-chef/html-projects/as7.jpg" alt="Product 7"></div> <h3>thermal knit</h3> <div class="price"><span class="offer-price">$65</span><span class="original-price">$80</span></div> <div class="details"><div class="sizes"><span>sz:</span><span class="size">m</span><span class="size">l</span></div><div class="colors"><span>cl:</span><span class="color-swatch" style="background: #222;"></span><span class="color-swatch" style="background: #ddd;"></span></div></div> <button class="cta-button">view</button> </div>
+                         <div class="product-card"> <div class="product-image"><img src="/web-chef/html-projects/as8.jpg" alt="Product 8"></div> <h3>oversized drop</h3> <div class="price"><span class="offer-price">$50</span></div> <div class="details"><div class="sizes"><span>sz:</span><span class="size">s</span><span class="size">m</span><span class="size">l</span></div><div class="colors"><span>cl:</span><span class="color-swatch" style="background: #5a5a5a;"></span></div></div> <button class="cta-button">view</button> </div>
+                         <div class="product-card"> <div class="product-image"><img src="/web-chef/html-projects/as4.jpg" alt="Product 9"></div> <h3>essential scoop</h3> <div class="price"><span class="offer-price">$30</span></div> <div class="details"><div class="sizes"><span>sz:</span><span class="size">s</span><span class="size">m</span><span class="size unavailable">l</span></div><div class="colors"><span>cl:</span><span class="color-swatch" style="background: #fff;"></span><span class="color-swatch" style="background: #000;"></span></div></div> <button class="cta-button">view</button> </div>
+                    </div>
+                 </div>
+             </div>
+        </section>
+
+        <!-- Section 3: Contact (Shirt Center) -->
+        <section id="contact-section" data-shirt-pos="center">
+            <div class="content-wrapper">
+                <div class="location-info">
+                    <h2>locations</h2>
+                    <p>we ship worldwide from our hubs:</p>
+                    <!-- ** UPDATE locations ** -->
+                    <ul><li>Irugur, CBE</li> <li>Gandhipuram, CBE</li> <li>Chennai Mobiles, CBE</li></ul>
+                    <p>pop-up sales events announced via instagram.</p>
+                </div>
+                <!-- Shirt positioned center -->
+                <div class="contact-info">
+                    <h2>connect</h2>
+                    <!-- ** UPDATE Instagram handle and link ** -->
+                    <p class="insta-link">instagram: <a href="https://instagram.com/asone_official" target="_blank" rel="noopener noreferrer">@asone_official</a></p>
+                    <p>collaborations:</p> <!-- ** UPDATE email ** -->
+                    <a href="mailto:arambikalanglaa@gmail.com">collab@asone.com</a>
+                    <p>general inquiries:</p> <!-- ** UPDATE email ** -->
+                    <a href="mailto:hello@asone.com">hello@asone.com</a>
+                    <!-- ** UPDATE or remove phone ** -->
+                    <p>customer support: +1 (555) 987-6543</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: About (Shirt Left) - ★★★ UPDATED POSITION ★★★ -->
+        <section id="about-section" data-shirt-pos="left"> <!-- ★★★ Changed data-shirt-pos -->
+             <div class="content-wrapper">
+                  <!-- Shirt positioned left -->
+                 <div class="about-content"> <!-- Content now on the right -->
+                    <h2>about asone</h2>
+                     <!-- ** UPDATE Moto ** -->
+                    <p class="moto">"unified threads for the individual collective."</p>
+                     <!-- ** UPDATE Description ** -->
+                    <p>asone was founded on the principle of creating essential, high-quality apparel that transcends fleeting trends. we focus on meticulous design, sustainable materials, and versatile pieces that form the core of a modern wardrobe.</p>
+                    <p>we believe in clothing as a form of subtle expression, designed to be lived in, worn often, and cherished.</p>
+                     <!-- ** UPDATE Founder Name ** -->
+                    <p class="founder">founder: alex chen</p>
+                 </div>
+             </div>
+        </section>
+    </main>
+
+    <footer>
+         <p>© 2024 asone. all rights reserved.</p>
+         <!-- ** Add links to actual policy pages if available ** -->
+         <p><a href="#">privacy policy</a> | <a href="#">terms of service</a> | <a href="#">returns</a></p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+             // --- Responsive Navbar Toggle ---
+            const menuToggle = document.querySelector('.menu-toggle');
+            const navLinks = document.querySelector('.nav-links');
+            const navLinkItems = document.querySelectorAll('.nav-links li a'); // Get individual links
+
+            if (menuToggle && navLinks) {
+                menuToggle.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    menuToggle.classList.toggle('active'); // For hamburger animation
+                });
+
+                // Close menu when a link is clicked (useful for single-page apps)
+                 navLinkItems.forEach(link => {
+                    link.addEventListener('click', () => {
+                        if (navLinks.classList.contains('active')) {
+                            navLinks.classList.remove('active');
+                            menuToggle.classList.remove('active');
+                        }
+                    });
+                 });
+            }
+
+            // --- Countdown Timer (Keep as before) ---
+            const countdownElement = document.getElementById('countdown');
+             if (countdownElement) {
+                 const daysEl = document.getElementById('days');
+                 const hoursEl = document.getElementById('hours');
+                 const minutesEl = document.getElementById('minutes');
+                 const secondsEl = document.getElementById('seconds');
+                 const targetDate = new Date('2024-12-31T23:59:59').getTime(); // *** SET TARGET DATE ***
+
+                 const updateCountdown = () => {
+                     const now = new Date().getTime();
+                     const distance = targetDate - now;
+                     if (distance < 0) { if (countdownElement.parentNode) { countdownElement.parentNode.innerHTML = "<h2 style='margin-top: 20px;'>the drop is live!</h2>"; } clearInterval(timerInterval); return; }
+                     const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                     const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                     const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                     const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                     if(daysEl) daysEl.textContent = String(days).padStart(2, '0'); if(hoursEl) hoursEl.textContent = String(hours).padStart(2, '0'); if(minutesEl) minutesEl.textContent = String(minutes).padStart(2, '0'); if(secondsEl) secondsEl.textContent = String(seconds).padStart(2, '0');
+                 };
+
+                 if (targetDate > new Date().getTime()) {
+                     const timerInterval = setInterval(updateCountdown, 1000);
+                     updateCountdown(); // Initial call to display immediately
+                 } else {
+                     // If 8 PM was already passed AND somehow the logic above didn't catch it
+                     // or if the target became the past during page load.
+                     if (countdownElement.parentNode) {
+                         countdownElement.parentNode.innerHTML = "<h2 style='margin-top: 20px;'>offer ends soon!</h2>";
+                     }
+                 }
+            }
+
+            // --- Shirt Position Control based on Scroll (Keep as before) ---
+            const shirtContainer = document.getElementById('shirt-container');
+            const sections = document.querySelectorAll('section[data-shirt-pos]');
+            let currentSection = null;
+            let ticking = false;
+
+            const updateShirtPosition = () => {
+                // Don't run positioning logic on smaller screens where it's fixed center
+                if (window.innerWidth <= 768) {
+                     shirtContainer.classList.remove('shirt-pos-left', 'shirt-pos-center', 'shirt-pos-right'); // Clear classes
+                     // CSS handles fixed top-center positioning via media query
+                     ticking = false;
+                     return;
+                }
+
+                const scrollY = window.scrollY;
+                const windowHeight = window.innerHeight;
+                const viewCenter = scrollY + windowHeight / 2;
+                let activeSection = null;
+
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.offsetHeight;
+                     if (sectionTop <= viewCenter && (sectionTop + sectionHeight) > viewCenter) { activeSection = section; }
+                });
+
+                 if (!activeSection) { if (scrollY < windowHeight / 2 && sections.length > 0) { activeSection = sections[0]; } else if (scrollY > (document.documentElement.scrollHeight - windowHeight * 1.5) && sections.length > 0) { activeSection = sections[sections.length - 1]; } }
+
+                if (activeSection && activeSection !== currentSection) {
+                    currentSection = activeSection;
+                    const desiredPos = currentSection.getAttribute('data-shirt-pos');
+                    shirtContainer.classList.remove('shirt-pos-left', 'shirt-pos-center', 'shirt-pos-right');
+                    if (desiredPos) { shirtContainer.classList.add(`shirt-pos-${desiredPos}`); }
+                }
+                ticking = false;
+            };
+
+             if (shirtContainer && sections.length > 0) {
+                window.addEventListener('scroll', () => { if (!ticking) { window.requestAnimationFrame(updateShirtPosition); ticking = true; } }, { passive: true });
+                window.addEventListener('resize', () => { if (!ticking) { window.requestAnimationFrame(updateShirtPosition); ticking = true; } }); // Re-check on resize
+                updateShirtPosition(); // Initial check
+            }
+
+             // --- Optional: Model Viewer Progress Bar ---
+             const modelViewer = document.getElementById('actual-shirt-model');
+             if (modelViewer) {
+                 const progressBar = modelViewer.querySelector('.progress-bar');
+                 const updateBar = modelViewer.querySelector('.update-bar');
+
+                 modelViewer.addEventListener('progress', (event) => {
+                     const progress = event.detail.totalProgress * 100;
+                      if (updateBar) updateBar.style.width = `${progress}%`;
+                      if (progress === 100 && progressBar) {
+                         // Wait a moment before hiding
+                         setTimeout(() => { progressBar.classList.add('hide'); }, 500);
+                     }
+                 });
+             }
+
+
+        }); // End DOMContentLoaded
+    </script>
+
+</body>
+</html>
